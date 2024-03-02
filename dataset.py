@@ -12,6 +12,7 @@ from scipy.io import loadmat
 TODO:
     The dataset class should contain data check?
     Add GPU processing?
+    (63, 83501) != (63, 93501)?
 '''
 
 
