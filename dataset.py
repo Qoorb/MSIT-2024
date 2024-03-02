@@ -14,8 +14,9 @@ class EEGDataset(Dataset):
         self.save_path = save_path
         self.dir_files = dir_files
         self.transform = transform
-        self.files = [file for file in os.listdir(dir_files) if file.endswith('.mat')]
-        self.data = self._read_data()
+        # self.files = [file for file in os.listdir(dir_files) if file.endswith('.mat')]
+        # self.data = self._read_data()
+        self.data = []
     
     # inner function
     def _read_data(self) -> list:
@@ -30,20 +31,27 @@ class EEGDataset(Dataset):
         return dataset
     
     def save(self) -> None:
-        # pickle.dump(self, open(f"{self.save_path}/dataset_EEG.pkl", 'wb'), True)
-        np.savetxt(f"{self.save_path}/dataset_EEG.csv", self.data, delimiter=",", fmt='%.3f')
+        pickle.dump(self, open(f"{self.save_path}/dataset_EEG.pkl", 'wb'), True)
+        # np.savetxt(f"{self.save_path}/dataset_EEG.csv", self.data, delimiter=",", fmt='%.3f')
 
         print('dataset has been saved')
 
-    def load_data(self, file_name: str) -> list:
-        # self.data = pickle.load(open(file_name,'rb'))
-        self.data = np.loadtxt(file_name)
+    @staticmethod
+    def load_data(file_name: str) -> list:
+        data = pickle.load(open(file_name,'rb'))
+        # self.data = np.loadtxt(file_name)
         
         print('dataset has been loaded')
+        return data
 
 
 if __name__ == '__main__':
-    data = EEGDataset(dir_files='./data/d002')
-    print(data.data)
+    # data = EEGDataset(dir_files='./data/d002')
+    # data.save()
 
+    # data = pickle.load(open("data/dataset_EEG.pkl",'rb'))
+    # print(data.data)
+
+    data = EEGDataset().load_data("data/dataset_EEG.pkl")
+    print(data.data)
     print('0')
