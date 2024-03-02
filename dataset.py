@@ -15,13 +15,14 @@ class EEGDataset(Dataset):
         self.dir_files = dir_files
         self.transform = transform
         self.files = [file for file in os.listdir(dir_files) if file.endswith('.mat')]
-        self.data = self.load_data()
+        self.data = self._read_data()
     
-    def load_data(self) -> list:
+    # inner function
+    def _read_data(self) -> list:
         dataset = []
 
         for file in self.files:
-            data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15]
+            data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15][:64] # 64 - EEG channels
             dataset.append(np.array(data))
 
             print(f"{file} added")
@@ -29,11 +30,16 @@ class EEGDataset(Dataset):
         return dataset
     
     def save(self) -> None:
-        pickle.dump(self, open(f"{self.save_path}/dataset_EEG.pkl", 'wb'), True)
-        
+        # pickle.dump(self, open(f"{self.save_path}/dataset_EEG.pkl", 'wb'), True)
+        np.savetxt(f"{self.save_path}/dataset_EEG.csv", self.data, delimiter=",", fmt='%.3f')
+
         print('dataset has been saved')
 
-
+    def load_data(self, file_name: str) -> list:
+        # self.data = pickle.load(open(file_name,'rb'))
+        self.data = np.loadtxt(file_name)
+        
+        print('dataset has been loaded')
 
 
 if __name__ == '__main__':
