@@ -64,7 +64,7 @@ class EEGDataset(Dataset):
 
 
 if __name__ == '__main__':
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     data = EEGDataset(dir_files='./data/d002')
     data.save()
@@ -72,4 +72,6 @@ if __name__ == '__main__':
     # data = EEGDataset.load_dataset("./data/dataset_EEG.pkl")
     # print(data._info())
     
+    # data_train = DataLoader(data, batch_size=4, shuffle=True)
+
     print('0')
