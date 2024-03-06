@@ -1,4 +1,6 @@
-.venv
+.venv/
+
+__pycache__/
 
 data/d001
 data/d002

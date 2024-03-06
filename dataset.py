@@ -13,16 +13,15 @@ import matplotlib.pyplot as plt
 '''
 TODO:
     The dataset class should contain data check?
-    Add GPU processing?
-    (63, 83501) != (63, 93501)?
 '''
 
 
 class EEGDataset(Dataset):
-    def __init__(self, save_path='./data', dir_files='', transform=None) -> None:
+    def __init__(self, save_path='./data', dir_files='', transform=None, group_size=1000) -> None:
         self.save_path = save_path
         self.dir_files = dir_files
         self.transform = transform
+        self.group_size = group_size
         self.data = self._read_data()
     
     def __len__(self) -> int:
@@ -34,7 +33,7 @@ class EEGDataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
             
-        return torch.tensor(sample, dtype=torch.float32).to(device)
+        return torch.tensor(sample, dtype=torch.float32)
 
     # inner function
     def _info(self) -> tuple:
@@ -46,15 +45,19 @@ class EEGDataset(Dataset):
 
         for file in files:
             data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15][:63] # 63 - EEG channels
-            dataset.append(data)
+            
+            for start_idx in range(0, data.shape[1], self.group_size):
+                if start_idx + self.group_size <= data.shape[1]:
+                    dataset.append(data[:, start_idx:start_idx + self.group_size])
 
             print(f"{file} added")
         
         return dataset
     
+    # test function
     def plot(self) -> None:
         for i in range(len(self.data)):
-            plt.plot(data[i][0],data[i][1])
+            plt.plot(self.data[i][0],self.data[i][1])
 
             plt.title('Lines Plot of a data')
             plt.xlabel('x-axis')
@@ -77,19 +80,10 @@ class EEGDataset(Dataset):
 
 if __name__ == '__main__':
 
-    # Checking is CUDA available on current machine
-    device = "cuda" if torch.cuda.is_available() else "cpu"
-    print("Project running on device: ", device)
-
-
     data = EEGDataset(dir_files='./data/d002')
     data.save()
 
     # data = EEGDataset.load_dataset("./data/dataset_EEG.pkl")
     # print(data._info())
-    
-    data.plot()
-
-    # data_train = DataLoader(data, batch_size=4, shuffle=True)
 
     print('0')
