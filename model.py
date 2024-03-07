@@ -36,23 +36,24 @@ class Autoencoder(nn.Module):
         return x
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': 
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    print("Project running on device: ", device)
 
-    model = Autoencoder().to(device)
-
+    model = Autoencoder()
+    model = model.to(device)
     data = EEGDataset.load_dataset("./data/dataset_EEG.pkl")
     data_train = DataLoader(data, batch_size=4, shuffle=True)
 
-    criterion = nn.MSELoss()
+    criterion = nn.MSELoss().to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
-    num_epochs = 10
+    num_epochs = 1000
     for epoch in range(num_epochs):
         running_loss = 0.0
         for data in data_train:
-            inputs = data
+            inputs = data.to(device)
 
             optimizer.zero_grad()
 
