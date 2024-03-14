@@ -1,3 +1,4 @@
+import torch
 from torch import nn
 
 from torchsummary import summary
@@ -5,35 +6,31 @@ from torchsummary import summary
 
 '''
 TODO:
-    fix dimensional losses?
+    how to delete a hard-coded code?
 '''
 
-# Model parameters:
-LAYERS = 3
-KERNELS = [3, 4, 3]
-CHANNELS = [128, 256, 512]
-STRIDES = [2, 2, 2]
-LINEAR_DIM = 64000
 
 class Encoder(nn.Module):
 
-    def __init__(self, input_size: int, hidden_size: int) -> None:
+    def __init__(self, input_size: int, hidden_size: int, 
+                 layers: int, kernels: list[int],
+                 channels: list[int], strides: list[int]) -> None:
         super(Encoder, self).__init__()
         
         self.input_size = input_size
         self.hidden_size = hidden_size
 
-        self.layers = LAYERS
-        self.kernels = KERNELS
-        self.channels = CHANNELS
-        self.strides = STRIDES
+        self.layers = layers
+        self.kernels = kernels
+        self.channels = channels
+        self.strides = strides
         self.conv = self._create_layers()
 
-        self.fc_dim = LINEAR_DIM
+        self.fc_dim = 512 * 125 # hardcoded
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(self.fc_dim, self.hidden_size)
 
-    def _create_layers(self):
+    def _create_layers(self) -> nn.Sequential:
         conv_layers = nn.Sequential()
 
         for i in range(self.layers):
@@ -54,7 +51,7 @@ class Encoder(nn.Module):
 
         return conv_layers
     
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
         x = self.conv(x)
         x = self.flatten(x)
 
@@ -63,23 +60,25 @@ class Encoder(nn.Module):
 
 class Decoder(nn.Module):
     
-    def __init__(self, hidden_size: int, output_size: int):
+    def __init__(self, hidden_size: int, output_size: int,
+                 layers: int, kernels: list[int],
+                 channels: list[int], strides: list[int]) -> None:
         super(Decoder, self).__init__()
 
-        self.fc_dim = LINEAR_DIM
+        self.fc_dim = 512 * 125 # hardcoded
         self.hidden_size = hidden_size
         
-        self.layers = LAYERS
-        self.kernels = KERNELS
-        self.channels = CHANNELS[::-1] # flip the channel dimensions
-        self.strides = STRIDES
+        self.layers = layers
+        self.kernels = kernels
+        self.channels = channels[::-1] # flip the channel dimensions
+        self.strides = strides
         
         self.linear = nn.Linear(self.hidden_size, self.fc_dim)
         self.conv =  self._create_layers()
 
-        self.output = nn.Conv1d(self.channels[-1], output_size, kernel_size=1, stride=1, padding=1)
+        self.output = nn.Conv1d(self.channels[-1], output_size, kernel_size=1, stride=1)
 
-    def _create_layers(self):
+    def _create_layers(self) -> nn.Sequential:
         conv_layers = nn.Sequential()
 
         for i in range(self.layers):
@@ -88,7 +87,8 @@ class Decoder(nn.Module):
                                                self.channels[i],
                                                kernel_size=self.kernels[i],
                                                stride=self.strides[i],
-                                               padding=1))
+                                               padding=1,
+                                               output_padding=1))
             
             else: conv_layers.append(nn.ConvTranspose1d(self.channels[i-1], 
                                                self.channels[i],
@@ -101,25 +101,29 @@ class Decoder(nn.Module):
 
         return conv_layers
         
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
         x = self.linear(x)
-        x = x.view(x.size(0), 512, 125)
+        x = x.view(x.size(0), 512, 125) # hardcoded
         x = self.conv(x)
         
         return self.output(x)
 
 
-class AutoEncoder(nn.Module):
+class Autoencoder(nn.Module):
     
-    def __init__(self):
-        super(AutoEncoder, self).__init__()
+    def __init__(self, input_size: int, hidden_size: int,
+                 layers: int, kernels: list[int],
+                 channels: list[int], strides: list[int]) -> None:
+        super(Autoencoder, self).__init__()
         
-        self.encoder = Encoder(input_size=63, hidden_size=2)
-        self.decoder = Decoder(hidden_size=2, output_size=63)
+        self.params = [layers, kernels, channels, strides]
+
+        self.encoder = Encoder(input_size, hidden_size, *self.params)
+        self.decoder = Decoder(hidden_size, input_size, *self.params)
         
-    def forward(self, x):
+    def forward(self, x) -> torch.Tensor:
         return self.decoder(self.encoder(x))
 
 
 if __name__ == '__main__':
-    summary(AutoEncoder(), (63, 1000), batch_size=10)
+    summary(Autoencoder(63, 1, 3, [3,3,3], [128,256,512], [2,2,2]), (63, 1000), batch_size=10)

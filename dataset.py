@@ -33,7 +33,7 @@ class EEGDataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
             
-        return torch.tensor(sample, dtype=torch.float32)
+        return torch.tensor(sample, dtype=torch.float32) # mb fix?
 
     # inner function
     def _info(self) -> tuple:
@@ -71,7 +71,7 @@ class EEGDataset(Dataset):
         print('dataset has been saved')
 
     @staticmethod
-    def load_dataset(file_name: str) -> list:
+    def load_dataset(file_name: str) -> object:
         data = pickle.load(open(file_name,'rb'))
         
         print('dataset has been loaded')

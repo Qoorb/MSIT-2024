@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from datetime import datetime
 
 import pandas as pd
 
@@ -7,13 +8,22 @@ from torch import nn
 from torch.utils.data import DataLoader
 
 from dataset import EEGDataset
-from autoencoder import AutoEncoder
+from model import Autoencoder
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print("Project running on device: ", device)
 
-model = AutoEncoder().to(device)
+config = {
+    'input_size': 63,
+    'hidden_size': 1,
+    'layers': 3,
+    'kernels': [3,3,3],
+    'channels': [128,256,512],
+    'strides': [2,2,2]
+}
+
+model = Autoencoder(**config).to(device)
 
 data = EEGDataset.load_dataset("./data/dataset_EEG.pkl")
 data_train = DataLoader(data, batch_size=10, shuffle=True)
@@ -24,7 +34,9 @@ optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 log = OrderedDict()
 log['loss'] = []
 
-num_epochs = 1000
+print(f'[training started][time:{datetime.now()}]')
+
+num_epochs = 5
 for epoch in range(num_epochs):
     running_loss = 0.0
 
@@ -47,4 +59,4 @@ for epoch in range(num_epochs):
     
     torch.save(model, './model/autoencoder')
 
-print('training ended')
+print(f'[training ended][time:{datetime.now()}]')
