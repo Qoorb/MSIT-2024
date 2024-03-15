@@ -21,7 +21,7 @@ config = {
     'kernels': [3,3,3],
     'channels': [128,256,512],
     'strides': [2,2,2],
-    'use_dropout': True
+    'use_dropout': False
 }
 
 model = Autoencoder(**config).to(device)
