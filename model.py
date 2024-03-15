@@ -14,11 +14,14 @@ class Encoder(nn.Module):
 
     def __init__(self, input_size: int, hidden_size: int, 
                  layers: int, kernels: list[int],
-                 channels: list[int], strides: list[int]) -> None:
+                 channels: list[int], strides: list[int],
+                 use_dropout: bool = True) -> None:
         super(Encoder, self).__init__()
         
         self.input_size = input_size
         self.hidden_size = hidden_size
+
+        self.use_dropout = use_dropout
 
         self.layers = layers
         self.kernels = kernels
@@ -49,6 +52,9 @@ class Encoder(nn.Module):
             
             conv_layers.append(nn.ReLU())
 
+            if self.use_dropout:
+                conv_layers.append(nn.Dropout1d(0.1))
+
         return conv_layers
     
     def forward(self, x) -> torch.Tensor:
@@ -62,11 +68,14 @@ class Decoder(nn.Module):
     
     def __init__(self, hidden_size: int, output_size: int,
                  layers: int, kernels: list[int],
-                 channels: list[int], strides: list[int]) -> None:
+                 channels: list[int], strides: list[int],
+                 use_dropout: bool = True) -> None:
         super(Decoder, self).__init__()
 
         self.fc_dim = 512 * 125 # hardcoded
         self.hidden_size = hidden_size
+
+        self.use_dropout = use_dropout
         
         self.layers = layers
         self.kernels = kernels
@@ -99,6 +108,9 @@ class Decoder(nn.Module):
 
             conv_layers.append(nn.ReLU())
 
+            if self.use_dropout:
+                conv_layers.append(nn.Dropout1d(0.1))
+
         return conv_layers
         
     def forward(self, x) -> torch.Tensor:
@@ -113,10 +125,11 @@ class Autoencoder(nn.Module):
     
     def __init__(self, input_size: int, hidden_size: int,
                  layers: int, kernels: list[int],
-                 channels: list[int], strides: list[int]) -> None:
+                 channels: list[int], strides: list[int],
+                 use_dropout: bool = True) -> None:
         super(Autoencoder, self).__init__()
         
-        self.params = [layers, kernels, channels, strides]
+        self.params = [layers, kernels, channels, strides, use_dropout]
 
         self.encoder = Encoder(input_size, hidden_size, *self.params)
         self.decoder = Decoder(hidden_size, input_size, *self.params)
