@@ -50,7 +50,9 @@ class Encoder(nn.Module):
                                              stride=self.strides[i], 
                                              padding=1))
             
-            conv_layers.append(nn.Tanh())
+            # conv_layers.append(nn.BatchNorm1d(self.channels[i]))
+
+            conv_layers.append(nn.PReLU())
 
             if self.use_dropout:
                 conv_layers.append(nn.Dropout1d(0.1))
@@ -106,7 +108,10 @@ class Decoder(nn.Module):
                                                padding=1,
                                                output_padding=1))
 
-            conv_layers.append(nn.Tanh())
+            # if i != self.layers - 1:
+            #     conv_layers.append(nn.BatchNorm1d(self.channels[i]))
+
+            conv_layers.append(nn.PReLU())
 
             if self.use_dropout:
                 conv_layers.append(nn.Dropout1d(0.1))
