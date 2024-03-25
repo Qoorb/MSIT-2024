@@ -4,14 +4,7 @@ from torch import nn
 from torchsummary import summary
 
 
-'''
-TODO:
-    how to delete a hard-coded code?
-'''
-
-
 class Encoder(nn.Module):
-
     def __init__(self, input_size: int, hidden_size: int, 
                  layers: int, kernels: list[int],
                  channels: list[int], strides: list[int],
@@ -29,7 +22,7 @@ class Encoder(nn.Module):
         self.strides = strides
         self.conv = self._create_layers()
 
-        self.fc_dim = 512 * 125 # hardcoded
+        self.fc_dim = 512000
         self.flatten = nn.Flatten()
         self.linear = nn.Linear(self.fc_dim, self.hidden_size)
 
@@ -38,24 +31,24 @@ class Encoder(nn.Module):
 
         for i in range(self.layers):
             if i == 0:
-                conv_layers.append(nn.Conv1d(in_channels=self.input_size,
+                conv_layers.append(nn.Conv2d(in_channels=1,
                                              out_channels=self.channels[i],
                                              kernel_size=self.kernels[i],
-                                             stride=self.strides[i], 
+                                             stride=self.strides[i],
                                              padding=1))
             else:
-                conv_layers.append(nn.Conv1d(in_channels=self.channels[i-1],
+                conv_layers.append(nn.Conv2d(in_channels=self.channels[i-1],
                                              out_channels=self.channels[i],
                                              kernel_size=self.kernels[i],
                                              stride=self.strides[i], 
                                              padding=1))
             
-            # conv_layers.append(nn.BatchNorm1d(self.channels[i]))
+            conv_layers.append(nn.BatchNorm2d(self.channels[i]))
 
-            conv_layers.append(nn.PReLU())
+            conv_layers.append(nn.ELU())
 
             if self.use_dropout:
-                conv_layers.append(nn.Dropout1d(0.1))
+                conv_layers.append(nn.Dropout2d(0.1))
 
         return conv_layers
     
@@ -74,7 +67,7 @@ class Decoder(nn.Module):
                  use_dropout: bool = True) -> None:
         super(Decoder, self).__init__()
 
-        self.fc_dim = 512 * 125 # hardcoded
+        self.fc_dim = 512000
         self.hidden_size = hidden_size
 
         self.use_dropout = use_dropout
@@ -87,40 +80,40 @@ class Decoder(nn.Module):
         self.linear = nn.Linear(self.hidden_size, self.fc_dim)
         self.conv =  self._create_layers()
 
-        self.output = nn.Conv1d(self.channels[-1], output_size, kernel_size=1, stride=1)
+        self.output = nn.Conv2d(self.channels[-1], output_size, kernel_size=1, stride=1)
 
     def _create_layers(self) -> nn.Sequential:
         conv_layers = nn.Sequential()
 
         for i in range(self.layers):
             
-            if i == 0: conv_layers.append(nn.ConvTranspose1d(self.channels[i],
+            if i == 0: conv_layers.append(nn.ConvTranspose2d(self.channels[i],
                                                self.channels[i],
                                                kernel_size=self.kernels[i],
                                                stride=self.strides[i],
                                                padding=1,
                                                output_padding=1))
             
-            else: conv_layers.append(nn.ConvTranspose1d(self.channels[i-1], 
+            else: conv_layers.append(nn.ConvTranspose2d(self.channels[i-1], 
                                                self.channels[i],
                                                kernel_size=self.kernels[i],
                                                stride=self.strides[i],
                                                padding=1,
                                                output_padding=1))
 
-            # if i != self.layers - 1:
-            #     conv_layers.append(nn.BatchNorm1d(self.channels[i]))
+            if i != self.layers - 1:
+                conv_layers.append(nn.BatchNorm2d(self.channels[i]))
 
-            conv_layers.append(nn.PReLU())
+            conv_layers.append(nn.ELU())
 
             if self.use_dropout:
-                conv_layers.append(nn.Dropout1d(0.1))
+                conv_layers.append(nn.Dropout2d(0.1))
 
         return conv_layers
         
     def forward(self, x) -> torch.Tensor:
         x = self.linear(x)
-        x = x.view(x.size(0), 512, 125) # hardcoded
+        x = x.view(x.size(0), 512, 8, 125) # hardcoded
         x = self.conv(x)
         
         return self.output(x)
@@ -144,4 +137,4 @@ class Autoencoder(nn.Module):
 
 
 if __name__ == '__main__':
-    summary(Autoencoder(63, 1, 3, [3,3,3], [128,256,512], [2,2,2]), (63, 1000), batch_size=10)
+    summary(Autoencoder(1, 1, 3, [3,3,3], [128,256,512], [2,2,2]), (1, 63, 1000), batch_size=10)
