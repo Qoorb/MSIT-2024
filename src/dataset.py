@@ -38,7 +38,7 @@ class EEGDataset(Dataset):
         files = [file for file in os.listdir(self.dir_files) if file.endswith('.mat')]
         dataset = []
 
-        for file in files[:6]:
+        for file in files[120:]:
             data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15][:64] # 64 - EEG channels
             
             for start_idx in range(0, data.shape[1], self.group_size):
@@ -61,7 +61,7 @@ class EEGDataset(Dataset):
         plt.savefig(f"{self.save_path}/plot.png")
     
     def save(self) -> None:
-        pickle.dump(self, open(f"{self.save_path}/dataset_EEG.pkl", 'wb'), True)
+        pickle.dump(self, open(f"{self.save_path}/test_dataset_EEG.pkl", 'wb'), True) # TODO: fix
 
         print('dataset has been saved')
 
@@ -76,8 +76,7 @@ class EEGDataset(Dataset):
 if __name__ == '__main__':
 
     # transform = transforms.Compose([
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(-1, 1)
+    #     transforms.ToTensor(), # transforms.Normalize(-1, 1)
     # ])
 
     data = EEGDataset(dir_files='./data/d002')
