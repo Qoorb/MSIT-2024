@@ -16,7 +16,7 @@ def train(model, dataloader, criterion, optimizer, device):
                      leave=False, position=0, desc="Train")
 
     for i, batch in enumerate(dataloader):
-        inputs = batch.unsqueeze(1).to(device) # (batch_size, 63, 1000) -> (batch_size, 1, 63, 1000)
+        inputs = batch.to(device) # (batch_size, 1, 64, 1000)
 
         outputs = model(inputs)
         loss = criterion(outputs, inputs)
@@ -56,7 +56,7 @@ def validate(model, dataloader, criterion, optimizer, device):
                      leave=False, position=0, desc="Validation")
     
     for i, batch in enumerate(dataloader):
-        inputs = batch.unsqueeze(1).to(device) # (batch_size, 63, 1000) -> (batch_size, 1, 63, 1000)
+        inputs = batch.to(device)
         
         with torch.no_grad():
             outputs = model(inputs)

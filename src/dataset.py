@@ -28,7 +28,7 @@ class EEGDataset(Dataset):
         if self.transform:
             sample = self.transform(sample)
             
-        return torch.tensor(sample, dtype=torch.float32) # mb fix?
+        return sample
     
     # inner function
     def _info(self) -> tuple:
@@ -38,7 +38,7 @@ class EEGDataset(Dataset):
         files = [file for file in os.listdir(self.dir_files) if file.endswith('.mat')]
         dataset = []
 
-        for file in files[120:]:
+        for file in files[:6]:
             data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15][:64] # 64 - EEG channels
             
             for start_idx in range(0, data.shape[1], self.group_size):
@@ -48,17 +48,6 @@ class EEGDataset(Dataset):
             print(f"{file} added")
         
         return dataset
-    
-    # test function
-    def plot(self) -> None:
-        for i in range(len(self.data)):
-            plt.plot(self.data[i][0],self.data[i][1])
-
-            plt.title('Lines Plot of a data')
-            plt.xlabel('x-axis')
-            plt.ylabel('y-axis')
-
-        plt.savefig(f"{self.save_path}/plot.png")
     
     def save(self) -> None:
         pickle.dump(self, open(f"{self.save_path}/test_dataset_EEG.pkl", 'wb'), True) # TODO: fix
@@ -73,14 +62,30 @@ class EEGDataset(Dataset):
         return data
 
 
+def plot(data, path='./data') -> None:
+
+    if not os.path.exists('./data/plot'): os.mkdir('./data/plot')
+
+    for i in range(len(data)):
+        for j in range(64):
+            plt.plot(data[i][0][j])
+
+            plt.title('Lines Plot of a data')
+            plt.xlabel('x-axis')
+            plt.ylabel('y-axis')
+
+            plt.savefig(f"{path}/plot/plot_{i}_{j}.png")
+            plt.close()
+
+
 if __name__ == '__main__':
 
-    # transform = transforms.Compose([
-    #     transforms.ToTensor(), # transforms.Normalize(-1, 1)
-    # ])
+    transform = transforms.Compose([
+        transforms.ToTensor() # transforms.Normalize(-1, 1)
+    ])
 
-    data = EEGDataset(dir_files='./data/d002')
-    data.save()
+    # data = EEGDataset(dir_files='./data/d002', transform=transform)
+    # data.save()
 
-    # data = EEGDataset.load_dataset("./data/dataset_EEG.pkl")
-    # print(data._info())
+    data = EEGDataset.load_dataset('./data/test_dataset_EEG.pkl')
+    plot(data)
