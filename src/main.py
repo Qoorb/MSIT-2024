@@ -16,7 +16,7 @@ print("Project running on device: ", device)
 
 config = {
     'input_size': 1,
-    'hidden_size': 2,
+    'hidden_size': 350,
     'layers': 3,
     'kernels': [3,3,3],
     'channels': [128,256,512],

@@ -38,7 +38,7 @@ class EEGDataset(Dataset):
         files = [file for file in os.listdir(self.dir_files) if file.endswith('.mat')]
         dataset = []
 
-        for file in files[:6]:
+        for file in files[120:]:
             data = loadmat(os.path.join(self.dir_files, file))['EEG'][0][0][15][:64] # 64 - EEG channels
             
             for start_idx in range(0, data.shape[1], self.group_size):
@@ -84,8 +84,8 @@ if __name__ == '__main__':
         transforms.ToTensor() # transforms.Normalize(-1, 1)
     ])
 
-    # data = EEGDataset(dir_files='./data/d002', transform=transform)
-    # data.save()
+    data = EEGDataset(dir_files='./data/d002', transform=transform)
+    data.save()
 
-    data = EEGDataset.load_dataset('./data/test_dataset_EEG.pkl')
-    plot(data)
+    # data = EEGDataset.load_dataset('./data/test_dataset_EEG.pkl')
+    # plot(data)
