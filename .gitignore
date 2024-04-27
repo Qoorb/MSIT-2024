@@ -1,12 +1,9 @@
 .venv/
-
 __pycache__/
 
-data/d001
-data/d002
-
+data/d001/
+data/d002/
 test/
-
 model/
 
 *.pkl
